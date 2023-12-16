@@ -27,18 +27,24 @@ export async function POST(req: Request, res: NextResponse) {
     const chat = model.startChat({
       history,
       generationConfig: {
-        maxOutputTokens: 100,
+        maxOutputTokens: 1000,
         temperature: 0.9,
         topP: 0.1,
         topK: 16,
       },
     });
 
-    const result = await await chat.sendMessage(msg);
+    const result = await chat.sendMessageStream(msg);
     const response = await result.response;
     console.log(response.text());
 
-    const text = response.text();
+    // const text = response.text();
+    let text = "";
+    for await (const chunk of result.stream) {
+      const chunkText = chunk.text();
+      console.log(chunkText);
+      text += chunkText;
+    }
     return NextResponse.json({ text }, { status: 200 });
   } catch (err) {
     console.log(err);

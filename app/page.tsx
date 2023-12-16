@@ -1,7 +1,7 @@
 "use client";
 
-import { Avatar, Button, Card, Input, Textarea } from "@nextui-org/react";
-import { useEffect, useState } from "react";
+import { Avatar, Button, Card, Chip, Input, Textarea } from "@nextui-org/react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollShadow } from "@nextui-org/react";
 import { ThemeSwitcher } from "./components/ThemeSwitcher";
 import axios from "axios";
@@ -32,7 +32,17 @@ export default function Home() {
       },
     ]);
   }, []);
+  const chatContainerRef = useRef(null);
+  const scrollToBottom = () => {
+    //@ts-ignore
+    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  };
+
+  useEffect(() => {
+    scrollToBottom(); // Scroll to the bottom on initial load
+  }, [chatHistory]);
   const sendMessage = async () => {
+    setInputMessage("");
     const emptyUserMessage = { role: "user", parts: "" };
 
     const newHistory = [
@@ -56,41 +66,58 @@ export default function Home() {
     console.log(data);
 
     setMessages(data.text);
-    // const updatedHistory = [...newHistory, { role: "model", parts: data.text }];
+
     const updatedHistory = [...newHistory];
     updatedHistory[newHistory.length - 1] = { role: "model", parts: data.text };
 
     setChatHistory(updatedHistory);
+    scrollToBottom();
   };
 
   return (
     <div className="  bg-gradient-to-l from-rose-100 to-teal-100  ">
       <main className="flex min-h-screen flex-col items-center justify-between md:px-24 py-5    ">
-        <div className="flex md:w-[73%] w-[95%] md:p-3 p-2 flex-col items-center  ">
+        <div className="flex md:w-[73%] w-[95%] md:p-3 p-2 flex-col   ">
           {/* <div className=" h-full flex flex-col gap-2 overflow-y-auto bg-scroll  py-8 px-3 w-full"> */}
-          <div>
-            <h1 className=" text-lg font-semibold text-black">Bot</h1>
-
-            <div className=" min-h-[730px] max-h-[730px] ">
+          <div className="">
+            <ScrollShadow
+              ref={chatContainerRef}
+              offset={100}
+              orientation="horizontal"
+              hideScrollBar
+              className=" min-h-[730px] max-h-[730px]  "
+            >
               {chatHistory.map((message, index) => (
-                <div key={index}>
-                  <h5>{message.role} </h5>
-                  <ScrollShadow
-                    offset={100}
-                    orientation="horizontal"
-                    className="  max-h-[730px] "
+                <div key={index} className="   ">
+                  <Chip
+                    color="success"
+                    radius="sm"
+                    variant="flat"
+                    avatar={
+                      <Avatar
+                        name={message.role}
+                        size="sm"
+                        getInitials={(name) => name.charAt(0)}
+                      />
+                    }
+                    className=" md:text-xl font-medium  text-sm text-black  "
+                    classNames={{
+                      // base: "bg-gradient-to-br from-indigo-500 to-pink-500 border-small border-white/50 shadow-pink-500/30",
+                      content: "drop-shadow shadow-black text-black",
+                    }}
                   >
-                    <h1 className=" md:text-lg font-medium  text-xs text-gray-700">
-                      {" "}
-                      {message.parts}{" "}
-                    </h1>
-                  </ScrollShadow>
+                    {message.role}{" "}
+                  </Chip>
+                  <h1 className=" md:text-lg font-medium  text-sm text-gray-700">
+                    {" "}
+                    {message.parts}{" "}
+                  </h1>
                 </div>
               ))}
-            </div>
+            </ScrollShadow>
           </div>
-          {/* </div> */}
-          <div className="relative  md:w-[100%] w-[95%] bottom-4 gap-2 flex justify-center items-center ">
+
+          <div className="relative  md:w-[100%] w-[95%] bottom-4 gap-2 flex justify-center items-center mt-10">
             <Textarea
               type="text"
               value={inputMessage}
@@ -98,7 +125,7 @@ export default function Home() {
               variant="underlined"
               color="success"
               className="
-          resize-none overflow-y-auto text-black   rounded-l outline-none"
+          resize-none overflow-y-auto text-gray-600 font-semibold   rounded-l outline-none"
             />
             <Button
               className="py-2"
